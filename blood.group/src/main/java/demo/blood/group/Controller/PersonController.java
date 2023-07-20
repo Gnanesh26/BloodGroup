@@ -20,9 +20,9 @@ import static org.springframework.http.ResponseEntity.*;
 public class PersonController {
 
 
-@Autowired
+    @Autowired
     PersonRepository personRepository;
-@Autowired
+    @Autowired
     PersonService personService;
 
 
@@ -38,14 +38,14 @@ public class PersonController {
         Person createdPerson = personService.createPerson(person);
         return new ResponseEntity<>(createdPerson, HttpStatus.CREATED);
     }
+
     private boolean isValidEmail(String email) {
         return email != null && email.contains("@");
     }
+
     private boolean isValidBloodGroup(String bloodGroup) {
         return bloodGroup != null && bloodGroup.matches("[ABO]+");
     }
-
-
 
 
     @GetMapping("/bloodgroup")
@@ -59,31 +59,42 @@ public class PersonController {
 
 
 
-    @GetMapping("/age")
-    public ResponseEntity<String> getAgeByName(@RequestParam("name") String name) {
-        Person person = personRepository.findByName(name);
-        if (name == null || name.matches("\\d+")) {
-            String errorMessage = "Invalid name provided.";
-            return badRequest().body(errorMessage);
+        @GetMapping("/age")
+        public ResponseEntity<String> getAgeByName (@RequestParam("name") String name){
+            Person person = personRepository.findByName(name);
+            if (name == null || name.matches("\\d+")) {
+                String errorMessage = "Invalid name provided.";
+                return badRequest().body(errorMessage);
+            }
+
+            if (person == null) {
+                String errorMessage = "Person with name '" + name + "' not found.";
+                return status(HttpStatus.NOT_FOUND).body(errorMessage);
+            }
+
+
+            Date dob = person.getDob();
+            LocalDate currentDate = LocalDate.now();
+            LocalDate birthDate = dob.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+
+
+            Period period = Period.between(birthDate, currentDate);
+
+            String age = String.format("%d years %d months %d days",
+                    period.getYears(), period.getMonths(), period.getDays());
+            return ok(age);
         }
 
-        if (person == null) {
-            String errorMessage = "Person with name '" + name + "' not found.";
-            return status(HttpStatus.NOT_FOUND).body(errorMessage);
+    @DeleteMapping("/persons/{id}")
+    public ResponseEntity deletePerson(@PathVariable int id) {
+        if (!personRepository.existsById(id)) {
+            String errorMessage = "Person with ID " + id + " not found.";
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorMessage);
         }
 
-
-        Date dob = person.getDob();
-        LocalDate currentDate = LocalDate.now();
-        LocalDate birthDate = dob.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-
-
-        Period period = Period.between(birthDate, currentDate);
-
-        String age = String.format("%d years %d months %d days",
-                period.getYears(), period.getMonths(), period.getDays());
-        return ok(age);
+        personRepository.deleteById(id);
+        String message = "Row Deleted";
+        return ResponseEntity.ok(message);
     }
 
-
-}
+    }
