@@ -14,6 +14,8 @@ import java.time.ZoneId;
 import java.util.Date;
 import java.util.List;
 
+import static org.springframework.http.ResponseEntity.*;
+
 @RestController
 public class PersonController {
 
@@ -25,31 +27,51 @@ public class PersonController {
 
 
     @PostMapping("/add")
-    public ResponseEntity<Person> createPerson(@RequestBody Person person) {
+    public ResponseEntity<?> createPerson(@RequestBody Person person) {
+        if (!isValidEmail(person.getEmail())) {
+            return ResponseEntity.badRequest().body("Invalid email address");
+        }
+
+        if (!isValidBloodGroup(person.getBloodgroup())) {
+            return ResponseEntity.badRequest().body("Invalid blood group");
+        }
         Person createdPerson = personService.createPerson(person);
         return new ResponseEntity<>(createdPerson, HttpStatus.CREATED);
     }
+    private boolean isValidEmail(String email) {
+        return email != null && email.contains("@");
+    }
+    private boolean isValidBloodGroup(String bloodGroup) {
+        return bloodGroup != null && bloodGroup.matches("[ABO]+");
+    }
+
 
 
 
     @GetMapping("/bloodgroup")
-    public ResponseEntity<List<Person>> getDonorsByBloodGroup(@RequestParam("bloodGroup") String bloodGroup) {
+    public ResponseEntity<?> getDonorsByBloodGroup(@RequestParam("bloodGroup") String bloodGroup) {
         List<Person> donors = personService.getDonorsByBloodGroup(bloodGroup);
-
         if (donors.isEmpty()) {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid Blood Group !!");
         }
-
         return ResponseEntity.ok(donors);
     }
+
+
 
     @GetMapping("/age")
     public ResponseEntity<String> getAgeByName(@RequestParam("name") String name) {
         Person person = personRepository.findByName(name);
+        if (name == null || name.matches("\\d+")) {
+            String errorMessage = "Invalid name provided.";
+            return badRequest().body(errorMessage);
+        }
 
         if (person == null) {
-            return ResponseEntity.notFound().build();
+            String errorMessage = "Person with name '" + name + "' not found.";
+            return status(HttpStatus.NOT_FOUND).body(errorMessage);
         }
+
 
         Date dob = person.getDob();
         LocalDate currentDate = LocalDate.now();
@@ -60,7 +82,7 @@ public class PersonController {
 
         String age = String.format("%d years %d months %d days",
                 period.getYears(), period.getMonths(), period.getDays());
-        return ResponseEntity.ok(age);
+        return ok(age);
     }
 
 

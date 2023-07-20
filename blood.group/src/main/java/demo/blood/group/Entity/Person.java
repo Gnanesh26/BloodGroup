@@ -2,6 +2,7 @@ package demo.blood.group.Entity;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 
 import java.util.Date;
@@ -30,18 +31,17 @@ public class Person {
     @Column(name = "BloodGroup")
     private String bloodgroup;
 
-    @Column(name = "Email")
-    @NotBlank(message = "Email is required")
-    private String emailid;
+    @Email(message = "Invalid email address")
+    private String email;
 
-    public Person(int id, String name, String gender, int contactno, Date dob, String bloodgroup, String emailid) {
+    public Person(int id, String name, String gender, int contactno, Date dob, String bloodgroup, String email) {
         this.id = id;
         this.name = name;
         this.gender = gender;
         this.contactno = contactno;
         this.dob = dob;
         this.bloodgroup = bloodgroup;
-        this.emailid = emailid;
+        this.email = email;
     }
 
     public Person() {
@@ -95,12 +95,12 @@ public class Person {
         this.bloodgroup = bloodgroup;
     }
 
-    public String getEmailid() {
-        return emailid;
+    public String getEmail() {
+        return email;
     }
 
-    public void setEmailid(String emailid) {
-        this.emailid = emailid;
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     @Override
@@ -108,12 +108,12 @@ public class Person {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Person person = (Person) o;
-        return id == person.id && contactno == person.contactno && Objects.equals(name, person.name) && Objects.equals(gender, person.gender) && Objects.equals(dob, person.dob) && Objects.equals(bloodgroup, person.bloodgroup) && Objects.equals(emailid, person.emailid);
+        return id == person.id && contactno == person.contactno && Objects.equals(name, person.name) && Objects.equals(gender, person.gender) && Objects.equals(dob, person.dob) && Objects.equals(bloodgroup, person.bloodgroup) && Objects.equals(email, person.email);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, gender, contactno, dob, bloodgroup, emailid);
+        return Objects.hash(id, name, gender, contactno, dob, bloodgroup, email);
     }
 
     @Override
@@ -125,7 +125,7 @@ public class Person {
                 ", contactno=" + contactno +
                 ", dob=" + dob +
                 ", bloodgroup='" + bloodgroup + '\'' +
-                ", emailid='" + emailid + '\'' +
+                ", email='" + email + '\'' +
                 '}';
     }
 }
